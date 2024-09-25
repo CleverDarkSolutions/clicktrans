@@ -6,7 +6,7 @@
           <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
           <Textarea
               id="description"
-              v-model="form.description"
+              v-model="description"
               :maxlength="255"
               rows="3"
               autoResize
@@ -14,7 +14,7 @@
               class="w-full border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
           />
           <div class="text-sm text-gray-500">
-            Characters left: {{ 255 - form.description.length }}
+            Characters left: {{ 255 - description.length }}
           </div>
           <small v-if="errors.description" class="text-red-600">{{ errors.description }}</small>
         </div>
@@ -22,11 +22,11 @@
           <label class="block text-sm font-medium text-gray-700">Send confirmation</label>
           <div class="flex space-x-4">
             <div class="flex items-center">
-              <RadioButton inputId="yes" v-model="form.confirmation" value="yes" />
+              <RadioButton inputId="yes" v-model="confirmation" value="yes" />
               <label for="yes" class="ml-2 text-sm">Yes</label>
             </div>
             <div class="flex items-center">
-              <RadioButton inputId="no" v-model="form.confirmation" value="no" />
+              <RadioButton inputId="no" v-model="confirmation" value="no" />
               <label for="no" class="ml-2 text-sm">No</label>
             </div>
           </div>
@@ -37,7 +37,7 @@
           <label for="vat" class="block text-sm font-medium text-gray-700">VAT</label>
           <Dropdown
               id="vat"
-              v-model="form.vat"
+              v-model="vat"
               :options="vatOptions"
               optionLabel="label"
               placeholder="Choose VAT"
@@ -49,12 +49,11 @@
 
         <div class="col-span-1">
           <label for="priceNetto" class="block text-sm font-medium text-gray-700">Price Netto EUR</label>
-          <InputText
+          <InputNumber
               id="priceNetto"
-              v-model="form.priceNetto"
+              v-model="priceNetto"
               :disabled="!vatSelected"
               placeholder="Enter price netto"
-              @input="validateNettoPrice"
               class="w-full border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
           />
           <small v-if="errors.priceNetto" class="text-red-600">{{ errors.priceNetto }}</small>
@@ -62,9 +61,9 @@
 
         <div class="col-span-1">
           <label for="priceBrutto" class="block text-sm font-medium text-gray-700">Price Brutto EUR</label>
-          <InputText
+          <InputNumber
               id="priceBrutto"
-              v-model="priceBrutto"
+              v-model="computedPriceBrutto"
               disabled
               class="w-full border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
           />
@@ -84,94 +83,74 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue';
-import InputText from 'primevue/inputtext';
+import { ref, computed } from 'vue';
+import InputNumber from 'primevue/inputnumber';
 import Textarea from 'primevue/textarea';
 import RadioButton from 'primevue/radiobutton';
 import Dropdown from 'primevue/dropdown';
 import Button from 'primevue/button';
 
-const form = reactive({
-  description: '',
-  confirmation: '',
-  vat: '',
-  priceNetto: '',
-});
-
-const errors = reactive({
+const description = ref('');
+const confirmation = ref('');
+const vat = ref(0);
+const priceNetto = ref(0);
+const errors = ref({
   description: '',
   confirmation: '',
   vat: '',
   priceNetto: '',
   submit: '',
 });
-
 const vatSelected = ref(false);
-const priceBrutto = ref('');
 const isSubmitted = ref(false);
 
 const vatOptions = [
-  { label: '19%', value: '19' },
-  { label: '21%', value: '21' },
-  { label: '23%', value: '23' },
-  { label: '25%', value: '25' }
+  { label: '19%', value: 19 },
+  { label: '21%', value: 21 },
+  { label: '23%', value: 23 },
+  { label: '25%', value: 25 }
 ];
 
+const computedPriceBrutto = computed(() => {
+  console.log(vat.value);
+  console.log(priceNetto.value)
+  return priceNetto.value * (1 + (vat.value.value / 100));
+});
+
 function checkDescriptionLength() {
-  if (!form.description) {
-    errors.description = 'Text is required';
-  } else if (form.description.length > 255) {
-    errors.description = 'You can’t enter more than 255 characters';
+  if (!description.value) {
+    errors.value.description = 'Text is required';
+  } else if (description.value.length > 255) {
+    errors.value.description = 'You can’t enter more than 255 characters';
   } else {
-    errors.description = '';
+    errors.value.description = '';
   }
 }
 
 function enableNettoInput() {
-  vatSelected.value = !!form.vat;
-  updateBruttoPrice();
-}
-
-function validateNettoPrice() {
-  const price = form.priceNetto.replace(',', '.');
-  if (isNaN(parseFloat(price)) || price === '') {
-    errors.priceNetto = 'Please, input number';
-  } else {
-    errors.priceNetto = '';
-    updateBruttoPrice();
-  }
-}
-
-function updateBruttoPrice() {
-  const priceNetto = parseFloat(form.priceNetto.replace(',', '.'));
-  const vat = parseFloat(form.vat);
-  if (!isNaN(priceNetto) && vat) {
-    priceBrutto.value = (priceNetto * (1 + vat / 100)).toFixed(2);
-  } else {
-    priceBrutto.value = '';
-  }
+  vatSelected.value = !!vat.value;
 }
 
 function validateForm(): boolean {
   let isValid = true;
 
-  if (!form.description) {
-    errors.description = 'Text is required';
+  if (!description.value) {
+    errors.value.description = 'Text is required';
     isValid = false;
   }
 
-  if (!form.confirmation) {
-    errors.confirmation = 'Text is required';
+  if (!confirmation.value) {
+    errors.value.confirmation = 'Text is required';
     isValid = false;
   }
 
-  if (!form.vat) {
-    errors.vat = 'Text is required';
+  if (!vat.value) {
+    errors.value.vat = 'Text is required';
     isValid = false;
   }
 
-  if (!form.priceNetto || isNaN(parseFloat(form.priceNetto.replace(',', '.')))) {
-    errors.priceNetto = 'Please, input number';
+  if (!priceNetto.value) {
+    errors.value.priceNetto = 'Please, input number';
     isValid = false;
   }
 
@@ -183,7 +162,12 @@ async function handleSubmit() {
     try {
       const response = await fetch('https://jsonplaceholder.typicode.com/posts', {
         method: 'POST',
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          description: description.value,
+          confirmation: confirmation.value,
+          vat: vat.value,
+          priceNetto: priceNetto.value,
+        }),
       });
 
       if (!response.ok) {
@@ -192,7 +176,7 @@ async function handleSubmit() {
 
       isSubmitted.value = true;
     } catch (error) {
-      errors.submit = 'Error submitting the form, please try again.';
+      errors.value.submit = 'Error submitting the form, please try again.';
     }
   }
 }
