@@ -16,7 +16,6 @@
                 class="w-full border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
-          <!-- Error message positioned absolutely -->
           <small v-if="errors.description" class="text-red-600 absolute right-[-140px]">{{ errors.description }}</small>
         </div>
 
