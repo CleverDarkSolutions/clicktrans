@@ -10,7 +10,7 @@
               :maxlength="255"
               rows="3"
               autoResize
-              @input="checkDescriptionLength"
+              @input="checkDescription"
               class="w-full border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
           />
           <div class="text-sm text-gray-500">
@@ -21,11 +21,11 @@
         <div class="col-span-2">
           <label class="block text-sm font-medium text-gray-700">Send confirmation</label>
           <div class="flex space-x-4">
-            <div class="flex items-center">
+            <div class="flex items-center" @click="checkConfirmation">
               <RadioButton inputId="yes" v-model="confirmation" value="yes" />
               <label for="yes" class="ml-2 text-sm">Yes</label>
             </div>
-            <div class="flex items-center">
+            <div class="flex items-center" @click="checkConfirmation">
               <RadioButton inputId="no" v-model="confirmation" value="no" />
               <label for="no" class="ml-2 text-sm">No</label>
             </div>
@@ -41,7 +41,7 @@
               :options="vatOptions"
               optionLabel="label"
               placeholder="Choose VAT"
-              @change="enableNettoInput"
+              @change="checkVat"
               class="w-full border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
           />
           <small v-if="errors.vat" class="text-red-600">{{ errors.vat }}</small>
@@ -49,9 +49,10 @@
 
         <div class="col-span-1">
           <label for="priceNetto" class="block text-sm font-medium text-gray-700">Price Netto EUR</label>
-          <InputNumber
+          <InputText
               id="priceNetto"
               v-model="priceNetto"
+              @input="checkNettoPrice"
               :disabled="!vatSelected"
               placeholder="Enter price netto"
               class="w-full border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
@@ -61,7 +62,7 @@
 
         <div class="col-span-1">
           <label for="priceBrutto" class="block text-sm font-medium text-gray-700">Price Brutto EUR</label>
-          <InputNumber
+          <InputText
               id="priceBrutto"
               v-model="computedPriceBrutto"
               disabled
@@ -84,16 +85,16 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import InputNumber from 'primevue/inputnumber';
 import Textarea from 'primevue/textarea';
 import RadioButton from 'primevue/radiobutton';
 import Dropdown from 'primevue/dropdown';
 import Button from 'primevue/button';
+import InputText from 'primevue/inputtext';
 
 const description = ref('');
 const confirmation = ref('');
 const vat = ref(0);
-const priceNetto = ref(0);
+const priceNetto = ref('');
 const errors = ref({
   description: '',
   confirmation: '',
@@ -114,10 +115,16 @@ const vatOptions = [
 const computedPriceBrutto = computed(() => {
   console.log(vat.value);
   console.log(priceNetto.value)
-  return priceNetto.value * (1 + (vat.value.value / 100));
+  const price = Number(priceNetto.value) * (1 + (vat.value.value / 100));
+  if(isNaN(price)){
+    return 0
+  }
+  else{
+    return price.toString();
+  }
 });
 
-function checkDescriptionLength() {
+function checkDescription() {
   if (!description.value) {
     errors.value.description = 'Text is required';
   } else if (description.value.length > 255) {
@@ -127,34 +134,55 @@ function checkDescriptionLength() {
   }
 }
 
-function enableNettoInput() {
+function checkConfirmation(){
+  console.log(confirmation.value);
+  if (!confirmation.value) {
+    errors.value.confirmation = 'Selection is required';
+  }
+  else {
+    errors.value.confirmation = '';
+  }
+}
+
+function checkVat() {
+  console.log(vat.value)
+  if (!vat.value) {
+    errors.value.vat = 'Text is required';
+  }
+  else{
+    errors.value.vat = '';
+  }
   vatSelected.value = !!vat.value;
 }
 
-function validateForm(): boolean {
-  let isValid = true;
-
-  if (!description.value) {
-    errors.value.description = 'Text is required';
-    isValid = false;
-  }
-
-  if (!confirmation.value) {
-    errors.value.confirmation = 'Text is required';
-    isValid = false;
-  }
-
-  if (!vat.value) {
-    errors.value.vat = 'Text is required';
-    isValid = false;
-  }
-
-  if (!priceNetto.value) {
+function checkNettoPrice() {
+  const numberPattern = /^[0-9]*[.,]?[0-9]+$/;
+  if (!numberPattern.test(priceNetto.value)) {
     errors.value.priceNetto = 'Please, input number';
-    isValid = false;
+  } else {
+    errors.value.priceNetto = '';
   }
+}
 
-  return isValid;
+function updateAssist() {
+
+}
+
+function validateForm(){
+  checkDescription()
+  checkConfirmation()
+  checkVat()
+  checkNettoPrice()
+  console.log(description.value !== '')
+  console.log(confirmation.value !== '')
+  console.log(vat.value.value > 0)
+  console.log(priceNetto.value !== '')
+  if(description.value !== '' && confirmation.value !== '' && vat.value.value > 0 && priceNetto.value !== ''){
+    return true;
+  }
+  else {
+    console.log('Failed', 'Desc: ',description.value,'Conf: ',confirmation.value,'VAT: ',vat.value.value, 'netto: ',priceNetto.value, 'Brutto: ', computedPriceBrutto.value)
+  }
 }
 
 async function handleSubmit() {
@@ -165,8 +193,9 @@ async function handleSubmit() {
         body: JSON.stringify({
           description: description.value,
           confirmation: confirmation.value,
-          vat: vat.value,
+          vat: vat.value.value,
           priceNetto: priceNetto.value,
+          priceBrutto: computedPriceBrutto.value
         }),
       });
 
@@ -176,6 +205,7 @@ async function handleSubmit() {
 
       isSubmitted.value = true;
     } catch (error) {
+      console.log(error)
       errors.value.submit = 'Error submitting the form, please try again.';
     }
   }
