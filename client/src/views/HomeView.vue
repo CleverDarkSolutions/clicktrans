@@ -21,12 +21,22 @@
         <div class="col-span-2">
           <label class="block text-sm font-medium text-gray-700">Send confirmation</label>
           <div class="flex space-x-4">
-            <div class="flex items-center" @click="checkConfirmation">
-              <RadioButton inputId="yes" v-model="confirmation" value="yes" />
+            <div class="flex items-center">
+              <RadioButton
+                  @change="checkConfirmation"
+                  inputId="yes"
+                  v-model="confirmation"
+                  value="yes"
+              />
               <label for="yes" class="ml-2 text-sm">Yes</label>
             </div>
-            <div class="flex items-center" @click="checkConfirmation">
-              <RadioButton inputId="no" v-model="confirmation" value="no" />
+            <div class="flex items-center">
+              <RadioButton
+                  @change="checkConfirmation"
+                  inputId="no"
+                  v-model="confirmation"
+                  value="no"
+              />
               <label for="no" class="ml-2 text-sm">No</label>
             </div>
           </div>
@@ -113,16 +123,15 @@ const vatOptions = [
 ];
 
 const computedPriceBrutto = computed(() => {
-  console.log(vat.value);
-  console.log(priceNetto.value)
-  const price = Number(priceNetto.value) * (1 + (vat.value.value / 100));
-  if(isNaN(price)){
-    return 0
-  }
-  else{
-    return price.toString();
+  const normalizedNetto = priceNetto.value.replace(',', '.');
+  const price = Number(normalizedNetto) * (1 + (vat.value.value / 100));
+  if (isNaN(price)) {
+    return 0;
+  } else {
+    return price.toFixed(2);
   }
 });
+
 
 function checkDescription() {
   if (!description.value) {
@@ -135,7 +144,6 @@ function checkDescription() {
 }
 
 function checkConfirmation(){
-  console.log(confirmation.value);
   if (!confirmation.value) {
     errors.value.confirmation = 'Selection is required';
   }
@@ -145,7 +153,6 @@ function checkConfirmation(){
 }
 
 function checkVat() {
-  console.log(vat.value)
   if (!vat.value) {
     errors.value.vat = 'Text is required';
   }
@@ -157,31 +164,23 @@ function checkVat() {
 
 function checkNettoPrice() {
   const numberPattern = /^[0-9]*[.,]?[0-9]+$/;
-  if (!numberPattern.test(priceNetto.value)) {
+  const normalizedPrice = priceNetto.value.replace(',', '.');
+  if (!numberPattern.test(priceNetto.value) || isNaN(parseFloat(normalizedPrice))) {
     errors.value.priceNetto = 'Please, input number';
   } else {
     errors.value.priceNetto = '';
   }
 }
-
-function updateAssist() {
-
-}
-
 function validateForm(){
   checkDescription()
   checkConfirmation()
   checkVat()
   checkNettoPrice()
-  console.log(description.value !== '')
-  console.log(confirmation.value !== '')
-  console.log(vat.value.value > 0)
-  console.log(priceNetto.value !== '')
   if(description.value !== '' && confirmation.value !== '' && vat.value.value > 0 && priceNetto.value !== ''){
     return true;
   }
   else {
-    console.log('Failed', 'Desc: ',description.value,'Conf: ',confirmation.value,'VAT: ',vat.value.value, 'netto: ',priceNetto.value, 'Brutto: ', computedPriceBrutto.value)
+    errors.value.submit = 'Error submitting the form, please try again.';
   }
 }
 
@@ -205,7 +204,6 @@ async function handleSubmit() {
 
       isSubmitted.value = true;
     } catch (error) {
-      console.log(error)
       errors.value.submit = 'Error submitting the form, please try again.';
     }
   }
