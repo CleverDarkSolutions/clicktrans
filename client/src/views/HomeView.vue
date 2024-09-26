@@ -1,26 +1,28 @@
 <template>
   <div class="container mx-auto p-6">
-    <div v-if="!isSubmitted" class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+    <div v-if="!isSubmitted">
       <form @submit.prevent="handleSubmit" class="space-y-6">
-        <div class="col-span-2">
+
+        <div class="relative col-span-2 flex items-center">
           <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
-          <Textarea
-              id="description"
-              v-model="description"
-              :maxlength="255"
-              rows="3"
-              autoResize
-              @input="checkDescription"
-              class="w-full border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-          />
-          <div class="text-sm text-gray-500">
-            Characters left: {{ 255 - description.length }}
+          <div class="flex-1 ml-4">
+            <Textarea
+                id="description"
+                v-model="description"
+                :maxlength="255"
+                rows="3"
+                autoResize
+                @input="checkDescription"
+                class="w-full border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+            />
           </div>
-          <small v-if="errors.description" class="text-red-600">{{ errors.description }}</small>
+          <!-- Error message positioned absolutely -->
+          <small v-if="errors.description" class="text-red-600 absolute right-[-140px]">{{ errors.description }}</small>
         </div>
-        <div class="col-span-2">
+
+        <div class="relative col-span-2 flex items-center">
           <label class="block text-sm font-medium text-gray-700">Send confirmation</label>
-          <div class="flex space-x-4">
+          <div class="flex space-x-4 ml-4">
             <div class="flex items-center">
               <RadioButton
                   @change="checkConfirmation"
@@ -40,58 +42,65 @@
               <label for="no" class="ml-2 text-sm">No</label>
             </div>
           </div>
-          <small v-if="errors.confirmation" class="text-red-600">{{ errors.confirmation }}</small>
+          <small v-if="errors.confirmation" class="text-red-600 absolute right-[-140px]">{{ errors.confirmation }}</small>
         </div>
 
-        <div class="col-span-1">
+        <div class="relative col-span-1 flex items-center">
           <label for="vat" class="block text-sm font-medium text-gray-700">VAT</label>
-          <Dropdown
-              id="vat"
-              v-model="vat"
-              :options="vatOptions"
-              optionLabel="label"
-              placeholder="Choose VAT"
-              @change="checkVat"
-              class="w-full border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-          />
-          <small v-if="errors.vat" class="text-red-600">{{ errors.vat }}</small>
+          <div class="flex-1 ml-4">
+            <Dropdown
+                id="vat"
+                v-model="vat"
+                :options="vatOptions"
+                optionLabel="label"
+                placeholder="Choose VAT"
+                @change="checkVat"
+                class="w-full border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+            />
+          </div>
+          <small v-if="errors.vat" class="text-red-600 absolute right-[-140px]">{{ errors.vat }}</small>
         </div>
 
-        <div class="col-span-1">
+        <div class="relative col-span-1 flex items-center">
           <label for="priceNetto" class="block text-sm font-medium text-gray-700">Price Netto EUR</label>
-          <InputText
-              id="priceNetto"
-              v-model="priceNetto"
-              @input="checkNettoPrice"
-              :disabled="!vatSelected"
-              placeholder="Enter price netto"
-              class="w-full border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-          />
-          <small v-if="errors.priceNetto" class="text-red-600">{{ errors.priceNetto }}</small>
+          <div class="flex-1 ml-4">
+            <InputText
+                id="priceNetto"
+                v-model="priceNetto"
+                @input="checkNettoPrice"
+                :disabled="!vatSelected"
+                placeholder="Enter price netto"
+                class="w-full border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+            />
+          </div>
+          <small v-if="errors.priceNetto" class="text-red-600 absolute right-[-140px]">{{ errors.priceNetto }}</small>
         </div>
 
-        <div class="col-span-1">
+        <div class="col-span-1 flex items-center">
           <label for="priceBrutto" class="block text-sm font-medium text-gray-700">Price Brutto EUR</label>
-          <InputText
-              id="priceBrutto"
-              v-model="computedPriceBrutto"
-              disabled
-              class="w-full border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-          />
+          <div class="flex-1 ml-4">
+            <InputText
+                id="priceBrutto"
+                v-model="computedPriceBrutto"
+                disabled
+                class="w-full border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+            />
+          </div>
         </div>
 
-        <div class="col-span-2">
+        <div>
           <Button label="Submit" icon="pi pi-check" type="submit" class="w-full bg-indigo-600 text-white font-medium py-2 px-4 rounded-md hover:bg-indigo-700" />
+          <small v-if="errors.submit" class="text-red-600 col-span-2 right-[-140px]">{{ errors.submit }}</small>
         </div>
       </form>
-
-      <small v-if="errors.submit" class="text-red-600 col-span-2">{{ errors.submit }}</small>
     </div>
+
     <div v-else class="success-message text-center p-4 bg-green-100 text-green-700 rounded-lg">
       <h2>Congratulations! Your form has been submitted successfully.</h2>
     </div>
   </div>
 </template>
+
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
@@ -145,7 +154,7 @@ function checkDescription() {
 
 function checkConfirmation(){
   if (!confirmation.value) {
-    errors.value.confirmation = 'Selection is required';
+    errors.value.confirmation = 'Text is required';
   }
   else {
     errors.value.confirmation = '';
