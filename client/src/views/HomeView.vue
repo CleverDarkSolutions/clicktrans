@@ -9,14 +9,16 @@
             <Textarea
                 id="description"
                 v-model="description"
-                :maxlength="255"
                 rows="3"
                 autoResize
                 @input="checkDescription"
                 class="w-full border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
-          <small v-if="errors.description" class="text-red-600 absolute right-[-140px]">{{ errors.description }}</small>
+          <div class="text-sm text-gray-500 pl-4">
+            {{ description.length }} / 256
+          </div>
+          <small v-if="errors.description" class="text-red-600 absolute right-[-140px] w-20">{{ errors.description }}</small>
         </div>
 
         <div class="relative col-span-2 flex items-center">
@@ -41,7 +43,7 @@
               <label for="no" class="ml-2 text-sm">No</label>
             </div>
           </div>
-          <small v-if="errors.confirmation" class="text-red-600 absolute right-[-140px]">{{ errors.confirmation }}</small>
+          <small v-if="errors.confirmation" class="text-red-600 absolute right-[-140px] w-20">{{ errors.confirmation }}</small>
         </div>
 
         <div class="relative col-span-1 flex items-center">
@@ -57,7 +59,7 @@
                 class="w-full border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
-          <small v-if="errors.vat" class="text-red-600 absolute right-[-140px]">{{ errors.vat }}</small>
+          <small v-if="errors.vat" class="text-red-600 absolute right-[-140px] w-20">{{ errors.vat }}</small>
         </div>
 
         <div class="relative col-span-1 flex items-center">
@@ -72,7 +74,7 @@
                 class="w-full border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
-          <small v-if="errors.priceNetto" class="text-red-600 absolute right-[-140px]">{{ errors.priceNetto }}</small>
+          <small v-if="errors.priceNetto" class="text-red-600 absolute right-[-140px] w-20">{{ errors.priceNetto }}</small>
         </div>
 
         <div class="col-span-1 flex items-center">
@@ -187,7 +189,7 @@ function validateForm(){
   checkConfirmation()
   checkVat()
   checkNettoPrice()
-  if(description.value !== '' && confirmation.value !== '' && vat.value.value > 0 && priceNetto.value !== '' && isNettoNumber.value){
+  if(description.value !== '' && description.value.length < 255 && confirmation.value !== '' && vat.value.value > 0 && priceNetto.value !== '' && isNettoNumber.value){
     return true;
   }
   else {
