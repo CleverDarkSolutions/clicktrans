@@ -122,6 +122,7 @@ const errors = ref({
 });
 const vatSelected = ref(false);
 const isSubmitted = ref(false);
+const isNettoNumber = ref(false);
 
 const vatOptions = [
   { label: '19%', value: 19 },
@@ -175,8 +176,10 @@ function checkNettoPrice() {
   const normalizedPrice = priceNetto.value.replace(',', '.');
   if (!numberPattern.test(priceNetto.value) || isNaN(parseFloat(normalizedPrice))) {
     errors.value.priceNetto = 'Please, input number';
+    isNettoNumber.value = false;
   } else {
     errors.value.priceNetto = '';
+    isNettoNumber.value = true;
   }
 }
 function validateForm(){
@@ -184,7 +187,7 @@ function validateForm(){
   checkConfirmation()
   checkVat()
   checkNettoPrice()
-  if(description.value !== '' && confirmation.value !== '' && vat.value.value > 0 && priceNetto.value !== ''){
+  if(description.value !== '' && confirmation.value !== '' && vat.value.value > 0 && priceNetto.value !== '' && isNettoNumber.value){
     return true;
   }
   else {
